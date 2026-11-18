@@ -1,0 +1,44 @@
+name: Java CI Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        # Bài 4: Chạy test trên cả 3 Hệ điều hành
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      # Bài 10: Sửa lỗi thiếu bước Checkout source code
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      # Bài 6: Cài JDK 17 và bật Caching cho Maven
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Chạy kiểm thử, checkstyle và đo độ phủ code
+      - name: Build and Test with Maven
+        run: mvn clean verify
+
+      # Bài 5: Upload báo cáo JaCoCo lên GitHub
+      - name: Upload JaCoCo Coverage Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: jacoco-report-${{ matrix.os }}
+          path: target/site/jacoco/
+
+      # Bài 8: Upload file JAR đã đóng gói
+      - name: Upload compiled JAR
+        uses: actions/upload-artifact@v3
+        if: success()
+        with:
+          name: executable-jar-${{ matrix.os }}
+          path: target/*.jar
